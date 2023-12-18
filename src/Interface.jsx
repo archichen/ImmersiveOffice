@@ -31,7 +31,9 @@ export default function Interface() {
     });
   };
 
-  const switchMode = () => {
+  const switchMode = (event) => {
+    event.preventDefault()
+
     if (mode === GLOBAL.CONST.MODE_FLY) {
       dispatch({
         type: GLOBAL.ACTIONS.SWITCH_MODE,
@@ -171,9 +173,9 @@ export default function Interface() {
         onClick={switchMode}
       >
         {mode === GLOBAL.CONST.MODE_FLY ? (
-          <GrThreeD className="h-full w-full" color="white" />
-        ) : (
           <FaStreetView className="h-full w-full" color="white" />
+        ) : (
+          <GrThreeD className="h-full w-full" color="white" />
         )}
       </div>
     </>

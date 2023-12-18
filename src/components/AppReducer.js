@@ -1,20 +1,23 @@
 import GLOBAL from "../configs/Global";
 
-function switchFloorReducer(_, floor) {
+function switchFloorReducer(state, floor) {
   return {
+    ...state,
     curFloor: floor,
   };
 }
 
-function updateCamera(_, position, rotation) {
+function updateCamera(state, position, rotation) {
   return {
+    ...state,
     cameraPosition: position,
     cameraRotation: rotation,
   };
 }
 
-function switchMode(_, mode) {
+function switchMode(state, mode) {
   return {
+    ...state,
     mode,
   };
 }

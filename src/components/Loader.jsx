@@ -25,16 +25,12 @@ export default function Loader() {
         })
       }
     </div>
-    {/* <div className="
+    <div className="
     flex items-center justify-center
-    bg-white w-52 h-10 mt-10
-    rounded-full
-    cursor-pointer
-    hover:bg-gray-200
-    active:bg-gray-300
-    transition-all duration-200 ease-in-out
+    text-white
+    font-medium text-5xl
+    mt-10
     "
-    onClick={handleEnter}
-    >Enter</div> */}
+    >Loading...</div>
   </div>;
 }
