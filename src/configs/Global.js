@@ -4,6 +4,7 @@ const GLOBAL = {
     HM3F: "HM3F",
     HM17F: "HM17F",
     ZJ6F: "ZJ6F",
+    TEST_SCENE:"TEST_SCENE",
 
     // MODE
     MODE_FLY: "MODE_FLY",

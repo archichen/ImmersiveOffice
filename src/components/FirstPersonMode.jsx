@@ -1,76 +1,51 @@
-import { CameraShake, PointerLockControls, useKeyboardControls } from "@react-three/drei";
-import { useFrame, useThree } from "@react-three/fiber";
+import {
+  OrbitControls,
+  PointerLockControls,
+  useKeyboardControls,
+} from "@react-three/drei";
 import { useEffect, useRef } from "react";
-import GLOBAL from "../configs/Global";
-import * as THREE from "three";
+import nipplejs from "nipplejs";
+import { useFrame } from "@react-three/fiber";
+import device from "current-device";
+
+let touchManager = null;
+let touchAngle = "";
 
 export default function FirstPersonMode() {
   const [sub, get] = useKeyboardControls();
 
-  const pointerLockRef = useRef()
-
-  const { camera } = useThree();
+  const pointerLockRef = useRef();
 
   useEffect(() => {
-    camera.position.set(
-      GLOBAL.CONFIG.MODE_FIRST_PERSON.INITIAL_CAMERA_POSITION.x,
-      GLOBAL.CONFIG.MODE_FIRST_PERSON.INITIAL_CAMERA_POSITION.y,
-      GLOBAL.CONFIG.MODE_FIRST_PERSON.INITIAL_CAMERA_POSITION.z,
-    );
+    touchManager = nipplejs.create({
+      zone: document.getElementById("canvas"),
+      multitouch: false,
+      maxNumberOfNipples: 1,
+    });
 
-    return sub(
-      (state) => state,
-      (pressed) => pressed,
-    );
+    /**
+     * Detect touch direction
+     */
+    touchManager.on("dir", (evt, data) => {
+      const {
+        direction: { angle },
+      } = data;
+      touchAngle = angle;
+    });
+
+    /**
+     * User release touch pad
+     */
+    touchManager.on("end", () => {});
   }, []);
 
-  const velocity = new THREE.Vector3()
-  const direction = new THREE.Vector3()
-  let canJump = true
+  useFrame(() => {
+    if (device.type === "mobile") {
 
-  useFrame(({ camera }, delta) => {
-    const speed = GLOBAL.CONFIG.MODE_FIRST_PERSON.SPEED * delta;
-    const { current: controls } = pointerLockRef
-
-    if (controls.isLocked == true) {
-        const keyStats = get();
-
-        const moveForward = keyStats[GLOBAL.CONST.KEY_FORWARD]
-        const moveBackward = keyStats[GLOBAL.CONST.KEY_BACK]
-        const moveLeft = keyStats[GLOBAL.CONST.KEY_LEFT]
-        const moveRight = keyStats[GLOBAL.CONST.KEY_RIGHT]
-        const moveJump = keyStats[GLOBAL.CONST.KEY_JUMP]
-    
-        velocity.x -= velocity.x * 10.0 * delta;
-        velocity.z -= velocity.z * 10.0 * delta;
-    
-        velocity.y -= 0.1 * 100.0 * delta; // 100.0 = mass
-    
-        direction.z = Number( moveForward ) - Number( moveBackward );
-        direction.x = Number( moveRight ) - Number( moveLeft );
-        direction.normalize(); // this ensures consistent movements in all directions
-        
-        if ( moveForward || moveBackward ) velocity.z -= direction.z * speed;
-        if ( moveLeft || moveRight ) velocity.x -= direction.x * speed;
-        if ( moveJump ) velocity.y = controls.getObject().position.y + 2;
-
-        controls.moveRight( - velocity.x * delta );
-        controls.moveForward( - velocity.z * delta );
-
-        controls.getObject().position.y += ( velocity.y * delta );
-
-        if ( controls.getObject().position.y < GLOBAL.CONFIG.MODE_FIRST_PERSON.INITIAL_CAMERA_POSITION.y ) {
-
-            velocity.y = 0;
-            controls.getObject().position.y = GLOBAL.CONFIG.MODE_FIRST_PERSON.INITIAL_CAMERA_POSITION.y;
-
-            canJump = true;
-
-        }
+    } else {
+      
     }
-
-    camera.updateMatrix()
   });
 
-  return <PointerLockControls ref={pointerLockRef} />
+  return <PointerLockControls ref={pointerLockRef} />;
 }
