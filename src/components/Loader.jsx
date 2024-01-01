@@ -26,8 +26,6 @@ function Test({ progress }) {
 export default function Loader(props) {
   const { progress, errors, item } = useProgress();
 
-  console.log(props)
-
   return (
     <div className="flex h-screen h-screen flex-col items-center justify-center rounded-none border-none bg-gradient-to-b from-sky-700 from-70% to-sky-900">
       <CircularProgress
@@ -41,6 +39,7 @@ export default function Loader(props) {
         strokeWidth={4}
         showValueLabel={true}
         valueLabel={<Test progress={progress} />}
+        aria-label="Loading message"
       />
       <Chip
         classNames={{
@@ -48,6 +47,7 @@ export default function Loader(props) {
           content: "text-white/90 text-small font-semibold",
         }}
         variant="bordered"
+        aria-label="Loading message"
       >
         Loading...
       </Chip>{" "}

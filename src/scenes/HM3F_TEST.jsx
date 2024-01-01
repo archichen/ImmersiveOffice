@@ -4,46 +4,83 @@ Command: npx gltfjsx@6.2.15 .\public\models\hm3f_walls.glb --output .\src\scenes
 */
 
 import React, { useEffect, useRef, useState } from "react";
-import { Clone, Detailed, useGLTF } from "@react-three/drei";
+import { Clone, Detailed, Plane, useGLTF } from "@react-three/drei";
 import { useControls } from "leva";
-import { CuboidCollider, RigidBody } from "@react-three/rapier";
-import { useFrame, useLoader } from "@react-three/fiber";
 import { toast } from "react-hot-toast";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import * as THREE from "three";
+import * as CANNON from "cannon-es";
+import { useBox, usePlane, useTrimesh } from "@react-three/cannon";
 
+function Seat({objInfo, hqModel, lowModel}) {
+  const name = objInfo.name;
+  const pos = objInfo.position;
+  const rotationEuler = objInfo.rotation_euler;
+
+  const [box, boxApi] = useBox(() => ({
+    mass: 1,
+    position: [pos[0], -0.34, -pos[1]],
+    rotation: [rotationEuler[0], rotationEuler[2], rotationEuler[1]],
+    type: "Static",
+    args: [0.4, 0.4, 0.4]
+  }))
+  return (
+    <group
+      position={[pos[0], -0.34, -pos[1]]}
+      rotation={[rotationEuler[0], rotationEuler[2], rotationEuler[1]]}
+      key={name}
+      ref={box}
+    >
+      <Detailed distances={[0, 5]}>
+        <Clone object={hqModel} />
+        <Clone
+          object={lowModel}
+        />
+      </Detailed>
+    </group>
+  );
+
+}
 export function Model(props) {
-  const { scene: wall } = useGLTF("/models/hm3f/wall.glb");
+  const {
+    scene: wall,
+    nodes: {
+      wall001: { geometry },
+    },
+  } = useGLTF("/models/hm3f/wall.glb");
+  const {
+    attributes: {
+      position: { array: wallVertices },
+    },
+    index: { array: wallIndices },
+  } = geometry;
+
   const seatObj = useGLTF("/models/hm3f/seat.glb");
   const { nodes: seat, scene: seatScene } = seatObj;
 
-  const { scene: hqSeat} = useGLTF("/models/hm3f/high-quality-seat.glb")
+  const { scene: hqSeat } = useGLTF("/models/hm3f/high-quality-seat.glb");
 
   const [seatSize, setSeatSize] = useState(new THREE.Vector3(0, 0, 0));
-
-  const { wallPosition, wallScale, wallRotation } = useControls("Wall", {
-    wallPosition: {
-      value: {
-        x: 0,
-        y: 0,
-        z: 0,
-      },
-      step: 0.01,
-    },
-    wallScale: {
-      value: 1,
-      step: 0.01,
-    },
-    wallRotation: {
-      value: 0,
-      step: 0.01,
-    },
-  });
 
   const [seatsObjInfo, setSeatsObjInfo] = useState([]);
   const [wallObjInfo, setWallObjInfo] = useState([]);
 
   const seatRefs = useRef({});
+
+  // Physics
+  const [wallPhysics, wallApi] = useTrimesh(() => ({
+    mass: 1,
+    type: "Static",
+    args: [wallVertices, wallIndices],
+    position: [-3.1, 0, -1.27],
+  }));
+
+  // const [planePhysics] = usePlane(() => ({
+  //   type: "Static",
+  //   mass: 1,
+  //   rotation: [-Math.PI / 2, 0, 0],
+  //   position: [0, -1, 0],
+  // }));
 
   // Load seat position when component loaded
   useEffect(() => {
@@ -73,84 +110,46 @@ export function Model(props) {
       .setFromObject(seatScene)
       .getSize(new THREE.Vector3());
     setSeatSize(size);
-    console.log(seatScene);
   }, [seatScene]);
 
   // TODO: 继续完成碰撞调试
   // TODO: 重新排列椅子，注意低模和高模之间的差异
-  // TODO: 通过高模拓扑低摸，实现更好效果的低摸模型 
+  // TODO: 通过高模拓扑低摸，实现更好效果的低摸模型
 
   return (
     <group {...props} dispose={null}>
-      <RigidBody type="fixed" colliders="cuboid">
-        <mesh rotation={[-Math.PI / 2, 0, 0]} scale={50} position={[0, -5, 0]}>
-          <planeGeometry />
-          <meshStandardMaterial color="#8ebf55" />
-        </mesh>
-      </RigidBody>
-
+      {/* <Plane args={[100, 100]} ref={planePhysics} rotation={[-Math.PI / 2, 0, 0]} /> */}
       {/* Render wall */}
       {wallObjInfo.map((obj) => {
         const name = obj.name;
         const pos = obj.position;
         const rotationEuler = obj.rotation_euler;
 
+        // wallApi.position.set(pos[0], 0, pos[1]);
+        // wallApi.rotation.set(
+        //   rotationEuler[0],
+        //   (Math.PI / 2) * rotationEuler[2],
+        //   rotationEuler[1],
+        // );
         return (
-          <RigidBody
-            type="fixed"
-            colliders={false}
+          <group
             position={[pos[0], 0, pos[1]]}
             rotation={[
               rotationEuler[0],
               (Math.PI / 2) * rotationEuler[2],
               rotationEuler[1],
             ]}
+            // ref={wallPhysics}
             key={name}
           >
-            <CuboidCollider args={[12.1, 0.1, 13.4]} />
             <primitive object={wall} />
-          </RigidBody>
+          </group>
         );
       })}
 
       {/* Render seat */}
       {seatsObjInfo.map((obj) => {
-        const name = obj.name;
-        const pos = obj.position;
-        const rotationEuler = obj.rotation_euler;
-
-        return (
-          <RigidBody
-            colliders={false}
-            gravityScale={1}
-            type="fixed"
-            position={[pos[0], -0.34, -pos[1]]}
-            rotation={[rotationEuler[0], rotationEuler[2], rotationEuler[1]]}
-            key={name}
-            ref={(ref) => (seatRefs.current[name] = ref)}
-          >
-            <CuboidCollider
-              args={[seatSize.x, seatSize.y, seatSize.z]}
-              scale={0.5}
-            />
-            <Detailed distances={[0, 5]}>
-              <Clone 
-                object={hqSeat}
-              />
-              <Clone
-                object={seatScene}
-                onClick={() => {
-                  seatRefs.current[name].applyImpulse({
-                    x: Math.random(),
-                    y: Math.random(),
-                    z: Math.random(),
-                  });
-                }}
-              />
-
-            </Detailed>
-          </RigidBody>
-        );
+        return <Seat objInfo={obj} hqModel={hqSeat} lowModel={seatScene} key={obj.name} />
       })}
     </group>
   );

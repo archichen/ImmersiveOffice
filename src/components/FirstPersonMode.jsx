@@ -1,51 +1,12 @@
-import {
-  OrbitControls,
-  PointerLockControls,
-  useKeyboardControls,
-} from "@react-three/drei";
-import { useEffect, useRef } from "react";
-import nipplejs from "nipplejs";
-import { useFrame } from "@react-three/fiber";
+import { PerspectiveCamera } from "@react-three/drei";
 import device from "current-device";
-
-let touchManager = null;
-let touchAngle = "";
+import { useModeSwitchStore } from "../store/runtimeStore";
+import Global from "../configs/Global";
 
 export default function FirstPersonMode() {
-  const [sub, get] = useKeyboardControls();
+  const mode = useModeSwitchStore((state) => state.mode);
 
-  const pointerLockRef = useRef();
-
-  useEffect(() => {
-    touchManager = nipplejs.create({
-      zone: document.getElementById("canvas"),
-      multitouch: false,
-      maxNumberOfNipples: 1,
-    });
-
-    /**
-     * Detect touch direction
-     */
-    touchManager.on("dir", (evt, data) => {
-      const {
-        direction: { angle },
-      } = data;
-      touchAngle = angle;
-    });
-
-    /**
-     * User release touch pad
-     */
-    touchManager.on("end", () => {});
-  }, []);
-
-  useFrame(() => {
-    if (device.type === "mobile") {
-
-    } else {
-      
-    }
-  });
-
-  return <PointerLockControls ref={pointerLockRef} />;
+  return device.desktop() ? (
+    null
+  ) : null;
 }

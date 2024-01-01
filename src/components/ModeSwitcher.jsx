@@ -3,12 +3,11 @@ import { useContext } from "react";
 import AppContext from "./AppContext";
 import GLOBAL from "../configs/Global";
 import FlyMode from "./FlyMode";
+import { Box } from "@react-three/drei";
 
 export default function ModeSwitcher() {
   const { state, dispatch } = useContext(AppContext);
   const { mode } = state;
-
-  console.log(mode)
   
   let CurMode = FlyMode
   switch( mode ) {

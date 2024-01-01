@@ -14,6 +14,7 @@ import {
 } from "@nextui-org/react";
 import Selector from "./components/interface/Selector";
 import SearchInput from "./components/interface/SearchInput";
+import { useModeSwitchStore } from "./store/runtimeStore";
 
 export default function Interface() {
   const {
@@ -21,6 +22,9 @@ export default function Interface() {
     dispatch,
   } = useContext(AppContext);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const setFlyMode = useModeSwitchStore((state) => state.setFlyMode);
+  const setFirstPersonMode = useModeSwitchStore((state) => state.setFirstPersonMode);
 
   const switchMode = (event) => {
     event.preventDefault();
@@ -30,11 +34,15 @@ export default function Interface() {
         type: GLOBAL.ACTIONS.SWITCH_MODE,
         value: GLOBAL.CONST.MODE_FIRST_PERSON,
       });
+
+      setFirstPersonMode();
     } else {
       dispatch({
         type: GLOBAL.ACTIONS.SWITCH_MODE,
         value: GLOBAL.CONST.MODE_FLY,
       });
+
+      setFlyMode();
     }
   };
   return (
