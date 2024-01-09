@@ -51,7 +51,7 @@ const CONFIG = {
       },
     MODE_FIRST_PERSON: {
         MOTION_SPEED: 0.01,
-        ROTATION_SPEED: 0.01,
+        ROTATION_SPEED: 0.05,
         INITIAL_CAMERA_POSITION: { x: -4.6, y: 0.5, z: 5.0 },
         INITIAL_CAMERA_ROTATION: { x: 0, y: 0, z: 0 },
         PLAYER_POSITION: [],

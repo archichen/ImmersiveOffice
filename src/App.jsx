@@ -56,12 +56,13 @@ function App() {
             className="!absolute left-0 top-0"
             id="canvas"
           >
+                        <Physics>
+
             <Environment />
-            <Physics>
               <Debug color={"red"}>
                 <CurFloor />
 
-                <Player position={[0, 5, 0]} scale={0.003} />
+                
               </Debug>
             </Physics>
           </Canvas>

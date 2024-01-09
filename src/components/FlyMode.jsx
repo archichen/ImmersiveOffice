@@ -16,6 +16,5 @@ export default function FlyMode() {
     );
     camera.lookAt(0, 0, 0);
   }, []);
-  return null
-  // return <OrbitControls makeDefault={mode === Global.CONST.FlyMode} />;
+  return <OrbitControls makeDefault={mode === Global.CONST.FlyMode} />;
 }

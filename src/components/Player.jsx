@@ -181,14 +181,20 @@ export default function Player(props) {
 
   // Reset camera to default position
   const cameraInit = () => {
-    camera.fov = 75;
-    camera.near = 0.1;
-    camera.far = 100;
-    if (device.desktop()) {
-      playerCamera.current.aspect = window.innerHeight / window.innerWidth;
-    } else {
-      playerCamera.current.aspect = window.innerWidth / window.innerHeight;
-    }
+    
+    // playerCamera.current.fov = 75;
+    // playerCamera.current.near = 0.1;
+    playerCamera.current.far = 999999;
+    // if (device.desktop()) {
+    //   playerCamera.current.aspect = window.innerWidth / window.innerHeight;
+    //   console.log('desktop: ', playerCamera.current.aspect)
+    // } else {
+    //   playerCamera.current.aspect = window.innerWidth / window.innerHeight;
+    //   console.log('mobile: ', playerCamera.current.aspect)
+    // }
+    playerCamera.current.aspect = window.innerWidth / window.innerHeight;
+    // camera.aspect = playerCamera.current.aspect;
+    console.log(camera.aspect)
 
     playerCamera.current.updateMatrix();
     camera.updateMatrix();
