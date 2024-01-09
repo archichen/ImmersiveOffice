@@ -56,13 +56,10 @@ function App() {
             className="!absolute left-0 top-0"
             id="canvas"
           >
-                        <Physics>
-
-            <Environment />
+            <Physics>
+              <Environment />
               <Debug color={"red"}>
                 <CurFloor />
-
-                
               </Debug>
             </Physics>
           </Canvas>
