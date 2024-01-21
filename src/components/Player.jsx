@@ -154,6 +154,12 @@ export default function Player(props) {
     else return setAnimationName("idle");
   }, [isTurningRight]);
 
+  useEffect(() => {
+    if (isBackwardWalking) return setAnimationName("backward");
+    else if (isWalking) return setAnimationName("walking");  // Added this line
+    else return setAnimationName("idle");
+  }, [isBackwardWalking, isWalking]);  // Added isWalking to the dependency array  
+
   /**
    * Camera
    */
