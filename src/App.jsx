@@ -58,9 +58,7 @@ function App() {
           >
             <Physics>
               <Environment />
-              <Debug color={"red"}>
                 <CurFloor />
-              </Debug>
             </Physics>
           </Canvas>
         </KeyboardControls>

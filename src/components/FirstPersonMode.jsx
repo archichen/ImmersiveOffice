@@ -7,5 +7,5 @@ import Player from "./Player";
 export default function FirstPersonMode() {
   const mode = useModeSwitchStore((state) => state.mode);
 
-  return <Player position={[0, 5, 0]} scale={0.003} />
+  return <Player position={[0, 5, 0]} />
 }

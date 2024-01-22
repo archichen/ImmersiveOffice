@@ -13,7 +13,7 @@ import nipplejs from "nipplejs";
 import device from "current-device";
 import Global from "../configs/Global";
 import * as THREE from "three";
-import { useBox, useSphere, useTrimesh } from "@react-three/cannon";
+import { useBox, useRaycastAll, useSphere, useTrimesh } from "@react-three/cannon";
 import { useControls } from "leva";
 import * as CANNON from "cannon-es";
 
@@ -22,71 +22,19 @@ let touchAngle = "";
 let lastTouchAngle = null;
 
 export default function Player(props) {
-  /**
-   * Model
-   */
-  const model = useFBX("./models/player/locomotion-pack/character.fbx");
-  useEffect(() => {
-    model.traverse((child) => {
-      if (child.isMesh) {
-        child.material.transparent = false;
-      }
-    });
-  }, []);
-
-  /**
-   * Animation
-   */
-  const idleFBX = useFBX("./models/player/locomotion-pack/idle.fbx");
-  const idleAnimation = useAnimations(idleFBX.animations, model);
-  const backwardFBX = useFBX(
-    "./models/player/locomotion-pack/walking-backward-inplace.fbx",
-  );
-  const backwardAnimation = useAnimations(backwardFBX.animations, model);
-  const walkingFBX = useFBX(
-    "./models/player/locomotion-pack/walking-inplace.fbx",
-  );
-  const walkingAnimation = useAnimations(walkingFBX.animations, model);
-  const leftTurnFBX = useFBX("./models/player/locomotion-pack/left_turn.fbx");
-  const leftTurnAnimation = useAnimations(leftTurnFBX.animations, model);
-  const rightTurnFBX = useFBX("./models/player/locomotion-pack/right_turn.fbx");
-  const rightTurnAnimation = useAnimations(rightTurnFBX.animations, model);
-  const jumpFBX = useFBX("./models/player/locomotion-pack/jump.fbx");
-  const jumpAnimation = useAnimations(jumpFBX.animations, model);
-
-  const animations = {
-    idle: idleAnimation.actions["mixamo.com"],
-    backward: backwardAnimation.actions["mixamo.com"],
-    walking: walkingAnimation.actions["mixamo.com"],
-    left_turn: leftTurnAnimation.actions["mixamo.com"],
-    right_turn: rightTurnAnimation.actions["mixamo.com"],
-    jump: jumpAnimation.actions["mixamo.com"],
-  };
-
-  const [isIdle, setIsIdle] = useState(true);
-  const [isWalking, setIsWalking] = useState(false);
-  const [isBackwardWalking, setIsBackwardWalking] = useState(false);
-  const [isJumping, setIsJumping] = useState(false);
-  const [isTurningLeft, setIsTurningLeft] = useState(false);
-  const [isTurningRight, setIsTurningRight] = useState(false);
-  const [animationName, setAnimationName] = useState();
 
   const mobileFnMap = (angle) => {
     const mapping = {
       up: (status) => {
-        setIsWalking(status);
         setIsTouchPadUp(status);
       },
       down: (status) => {
-        setIsBackwardWalking(status);
         setIsTouchPadDown(status);
       },
       left: (status) => {
-        setIsTurningLeft(status);
         setIsTouchPadLeft(status);
       },
       right: (status) => {
-        setIsTurningRight(status);
         setIsTouchPadRight(status);
       },
     };
@@ -110,56 +58,6 @@ export default function Player(props) {
     }
   };
 
-  const playAnimation = (animationName) => {
-    console.log(`Playing anime: ${animationName}`);
-    if (animationName) {
-      const action = animations[animationName];
-      action.reset().fadeIn(0.5).play();
-
-      return () => {
-        action.fadeOut(0.5);
-      };
-    } 
-    return () => {};
-  };
-
-  // Play idle animation at start
-  useEffect(() => {
-    return playAnimation(animationName);
-  }, [animationName]);
-
-  useEffect(() => {
-    console.log(`isWalking: ${isWalking}`);
-    if (isWalking) return setAnimationName("walking");
-    else return setAnimationName("idle");
-  }, [isWalking]);
-
-  useEffect(() => {
-    if (isBackwardWalking) return setAnimationName("backward");
-    else return setAnimationName("idle");
-  }, [isBackwardWalking]);
-
-  useEffect(() => {
-    if (isJumping) return setAnimationName("jump");
-    else return setAnimationName("idle");
-  }, [isJumping]);
-
-  useEffect(() => {
-    if (isTurningLeft) return setAnimationName("left_turn");
-    else return setAnimationName("idle");
-  }, [isTurningLeft]);
-
-  useEffect(() => {
-    if (isTurningRight) return setAnimationName("right_turn");
-    else return setAnimationName("idle");
-  }, [isTurningRight]);
-
-  useEffect(() => {
-    if (isBackwardWalking) return setAnimationName("backward");
-    else if (isWalking) return setAnimationName("walking");  // Added this line
-    else return setAnimationName("idle");
-  }, [isBackwardWalking, isWalking]);  // Added isWalking to the dependency array  
-
   /**
    * Camera
    */
@@ -177,7 +75,6 @@ export default function Player(props) {
     fixedRotation: true,
     ...props,
     args: [0.1],
-    // position: [PLAYER_POSITION[0], PLAYER_POSITION[1], PLAYER_POSITION[2]]
   }));
   const { PLAYER_POSITION, PLAYER_ROTATION } = Global.CONFIG.MODE_FIRST_PERSON;
 
@@ -187,34 +84,12 @@ export default function Player(props) {
 
   // Reset camera to default position
   const cameraInit = () => {
-    
-    // playerCamera.current.fov = 75;
-    // playerCamera.current.near = 0.1;
-    playerCamera.current.far = 999999;
-    // if (device.desktop()) {
-    //   playerCamera.current.aspect = window.innerWidth / window.innerHeight;
-    //   console.log('desktop: ', playerCamera.current.aspect)
-    // } else {
-    //   playerCamera.current.aspect = window.innerWidth / window.innerHeight;
-    //   console.log('mobile: ', playerCamera.current.aspect)
-    // }
     playerCamera.current.aspect = window.innerWidth / window.innerHeight;
-    // camera.aspect = playerCamera.current.aspect;
     console.log(camera.aspect)
 
     playerCamera.current.updateMatrix();
     camera.updateMatrix();
 
-    // camera.position.set({
-    //   x: PLAYER_POSITION[0] + 2,
-    //   y: PLAYER_POSITION[1] + 2,
-    //   z: PLAYER_POSITION[2] + 2
-    // })
-    // camera.lookAt(new THREE.Vector3(
-    //   PLAYER_POSITION[0],
-    //   PLAYER_POSITION[1],
-    //   PLAYER_POSITION[2]
-    // ))
   };
 
   const playerPosAndRotSub = () => {
@@ -320,7 +195,7 @@ export default function Player(props) {
     euler.setFromQuaternion(nextQuat, "YXZ");
     direction.set(Math.sin(euler.y), 0, Math.cos(euler.y));
 
-    const distance = Global.CONFIG.MODE_FIRST_PERSON.MOTION_SPEED;
+    const distance = -Global.CONFIG.MODE_FIRST_PERSON.MOTION_SPEED;
 
     let nextPosition = new THREE.Vector3();
     nextPosition.set(
@@ -331,6 +206,7 @@ export default function Player(props) {
     nextPosition.add(direction.multiplyScalar(distance));
     playerApi.position.set(nextPosition.x, nextPosition.y, nextPosition.z);
   };
+
   const handleBackward = () => {
     const direction = new THREE.Vector3();
     const nextQuat = new THREE.Quaternion();
@@ -344,7 +220,7 @@ export default function Player(props) {
     euler.setFromQuaternion(nextQuat, "YXZ");
     direction.set(Math.sin(euler.y), 0, Math.cos(euler.y));
 
-    const distance = -Global.CONFIG.MODE_FIRST_PERSON.MOTION_SPEED;
+    const distance = Global.CONFIG.MODE_FIRST_PERSON.MOTION_SPEED;
 
     let nextPosition = new THREE.Vector3();
     nextPosition.set(
@@ -387,50 +263,25 @@ export default function Player(props) {
   };
 
   const handleJump = () => {
-    playerApi.applyLocalImpulse([0, 0.4, 0], [0, 0, 0]);
-  };
-
-  const judeMotionStatus = (forcePayload) => {
-    const force = Math.abs(forcePayload.totalForce.x);
-    if (force < Global.CONFIG.MOTION.MOVING_THRESHOLD) {
-      setMotionStatus(Global.CONST.MOTION.STOP);
-    } else {
-      setMotionStatus(Global.CONST.MOTION.MOVING);
-    }
+    playerApi.applyLocalImpulse([0, .5, 0], [0, 0, 0]);
   };
 
   const keyboardHandler = (state) => {
-    // if (motionStatus === Global.CONST.MOTION.MOVING) return;
 
     if (get()["FORWARD"]) {
-      setIsWalking(true);
       handleForward();
-    } else {
-      setIsWalking(false);
     }
     if (get()["BACKWARD"]) {
-      setIsBackwardWalking(true);
       handleBackward();
-    } else {
-      setIsBackwardWalking(false);
     }
     if (get()["LEFT"]) {
-      setIsTurningLeft(true);
       handleTurnLeft(state);
-    } else {
-      setIsTurningLeft(false);
     }
     if (get()["RIGHT"]) {
-      setIsTurningRight(true);
       handleTurnRight(state);
-    } else {
-      setIsTurningRight(false);
     }
     if (get()["JUMP"]) {
-      setIsJumping(true);
-      handleJump();
-    } else {
-      setIsJumping(false);
+      // handleJump();
     }
   };
 
@@ -442,21 +293,6 @@ export default function Player(props) {
     );
 
     state.camera.lookAt(playerPosition);
-
-    // const cameraPosition = new THREE.Vector3();
-    // cameraPosition.copy(playerPosition);
-    // cameraPosition.z += 2.25;
-    // cameraPosition.y += 0.65;
-
-    // const cameraTarget = new THREE.Vector3();
-    // cameraTarget.copy(playerPosition);
-    // cameraTarget.y += 0.25;
-
-    // smoothedCameraPosition.lerp(cameraPosition, 0.05);
-    // smoothedCameraTarget.lerp(cameraTarget, 0.05);
-
-    // state.camera.position.copy(smoothedCameraPosition);
-    // state.camera.lookAt(smoothedCameraTarget);
   };
 
   const commonControls = (state) => {
@@ -502,13 +338,12 @@ export default function Player(props) {
   });
   return (
     <group ref={player} {...props}>
-      <primitive object={model} position={[0, 0, 0]} />
       <PerspectiveCamera
         ref={playerCamera}
         manual
         makeDefault
-        position={[0, 150, -150]}
-        rotation={[3.3, 0, 3.14]}
+        position={[0, .5, 0]}
+        // rotation={[3.3, 0, 3.14]}
         lookAt={() => new THREE.Vector3(0, 0, 0)}
         fov={75}
         near={0.1}

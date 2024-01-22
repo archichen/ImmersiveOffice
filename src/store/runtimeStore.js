@@ -18,4 +18,8 @@ const usePlayerStore = create((set) => ({
   setPlayer: (player) => set({ player }),
 }));
 
-export { useModeSwitchStore , usePlayerStore};
+const useSelectedSeatStore = create((set) => ({
+  selectedSeat: '',
+  setSelectedSeat: (seat) => set({ selectedSeat: seat }),
+}));
+export { useModeSwitchStore , usePlayerStore, useSelectedSeatStore};

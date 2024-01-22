@@ -4,18 +4,29 @@ Command: npx gltfjsx@6.2.15 .\public\models\hm3f_walls.glb --output .\src\scenes
 */
 
 import React, { useEffect, useRef, useState } from "react";
-import { Clone, Detailed, Plane, useGLTF } from "@react-three/drei";
+import { Clone, Detailed, Plane, meshBounds, useGLTF, Html } from "@react-three/drei";
 import { useControls } from "leva";
 import { toast } from "react-hot-toast";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
 import { useBox, usePlane, useTrimesh } from "@react-three/cannon";
+import {Popover, PopoverTrigger, PopoverContent, Button} from "@nextui-org/react";
+import { useSelectedSeatStore } from "../store/runtimeStore";
 
 function Seat({objInfo, hqModel, lowModel}) {
   const name = objInfo.name;
   const pos = objInfo.position;
   const rotationEuler = objInfo.rotation_euler;
+  const [isClicked, setClicked] = useState(false);
+  const setSelectedSeat = useSelectedSeatStore((state) => state.setSelectedSeat)
+
+  const handleClick = (evt, targetName) => {
+    evt.stopPropagation();
+    if(!isClicked) setSelectedSeat(targetName)
+    else setSelectedSeat('')
+    setClicked(!isClicked);
+  }
 
   const [box, boxApi] = useBox(() => ({
     mass: 1,
@@ -30,7 +41,15 @@ function Seat({objInfo, hqModel, lowModel}) {
       rotation={[rotationEuler[0], rotationEuler[2], rotationEuler[1]]}
       key={name}
       ref={box}
+      onClick={e => handleClick(e, name)}
+      raycast={meshBounds}
     >
+      <mesh
+        visible={isClicked}
+      >
+        <boxGeometry args={[.4, .4, .4]}/>
+        <meshStandardMaterial color={'red'} opacity={0.5} transparent={true} emissive={'red'} />
+      </mesh>
       <Detailed distances={[0, 5]}>
         <Clone object={hqModel} />
         <Clone
